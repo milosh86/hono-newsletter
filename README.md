@@ -34,6 +34,24 @@ To check both linting and formatting, run:
 npm run check
 ```
 This command will just check for compliance with the rules, without applying 
-any changes. Setup your IDE to use Biomejs for linting and formatting, to 
+any changes, which is useful for CI/CD pipelines.
+
+Set up your IDE to use Biomejs for linting and formatting, to 
 streamline the process during development.
 
+## Testing
+Vitest is used for testing. To run tests, use:
+```
+npm run test
+```
+
+There are 2 types of tests:
+- Unit tests (inside /src folder): testing individual functionality without external dependencies
+- Integration tests (in /test folder) - testing the whole system with external dependencies and mocks where needed
+
+## Security audit
+
+To check for vulnerabilities in the dependencies, run:
+```
+npm audit
+```
