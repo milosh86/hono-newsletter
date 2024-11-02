@@ -1,3 +1,4 @@
+import postgres from "postgres";
 import { beforeEach, describe, expect, test } from "vitest";
 import { app } from "../src";
 import { configureDb } from "./helpers";
@@ -32,6 +33,33 @@ describe("Subscriptions", () => {
             MOCK_ENV,
         );
         expect(res.status).toBe(201);
+    });
+
+    test("POST /subscriptions persists new subscriber", async () => {
+        // arrange
+        const sql = postgres(MOCK_ENV.DATABASE_URL);
+        const validBody = JSON.stringify({
+            name: "Test Name",
+            email: "test@test.com",
+        });
+
+        // act
+        const res = await app.request(
+            "/subscriptions",
+            {
+                method: "POST",
+                body: validBody,
+                headers: new Headers({ "Content-Type": "application/json" }),
+            },
+            MOCK_ENV,
+        );
+
+        // assert
+        const subscriptions = await sql`SELECT * FROM subscriptions`;
+
+        expect(subscriptions.length).toBe(1);
+        expect(subscriptions[0].name).toBe("Test Name");
+        expect(subscriptions[0].email).toBe("test@test.com");
     });
 
     test("POST /subscriptions returns 400 for invalid request data", async () => {
