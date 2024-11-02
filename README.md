@@ -74,7 +74,7 @@ If you want to skip spinning up the new Postgres container, you can run the scri
 with the SKIP_DOCKER=true env variable. It will then use the existing Postgres
 instance and do other steps as usual.
 
-```
+
 ### DB migrations and schema evolution
 We use `drizzle-kit` to manage database migrations. To create a new migration:
 
@@ -86,3 +86,27 @@ We use `drizzle-kit` to manage database migrations. To create a new migration:
 ```
 npm run db:new-migration
 ```
+
+## Environment variables
+
+To run the application, you need to set up the following environment variables:
+- `DATABASE_URL`: connection string to the Postgres database
+
+In Cloudflare Workers case, you can set up the environment variables in the 
+`wrangler.toml` file. For local development, you should use the `.dev.vars` file.
+Please use the `.dev.vars.example` file as a template. Please note that `.env` 
+file is used only for the database migrations by `drizzle-kit`.
+
+For more information check https://developers.cloudflare.com/workers/configuration/environment-variables/
+
+TODO: check Cloudflare Secrets for storing sensitive data!
+
+
+## Getting started with development
+
+1. Clone the repository
+2. Install dependencies with `npm install`
+3. Init `.env` file
+4. Init `.dev.vars` file
+5. Run the database setup script with `./scripts/init_db.sh`
+6. Run the application with `npm run dev`
