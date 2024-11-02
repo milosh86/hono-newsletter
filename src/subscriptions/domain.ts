@@ -9,15 +9,15 @@ export interface SubscriptionEntity {
     id: string;
     name: string;
     email: string;
-    status: SubscriptionStatus;
+    // status: SubscriptionStatus;
 }
 
-const allowedStatuses = ["pending_confirmation", "confirmed"] as const;
-export type SubscriptionStatus = (typeof allowedStatuses)[number];
+// const allowedStatuses = ["pending_confirmation", "confirmed"] as const;
+// export type SubscriptionStatus = (typeof allowedStatuses)[number];
 
-export function isValidStatus(status: string): status is SubscriptionStatus {
-    return (allowedStatuses as readonly string[]).includes(status);
-}
+// export function isValidStatus(status: string): status is SubscriptionStatus {
+//     return (allowedStatuses as readonly string[]).includes(status);
+// }
 
 // export function subscriptionEntityFromDb(
 // 	dbEntity: SubscriptionsEntityDb,
@@ -39,20 +39,20 @@ export function isValidStatus(status: string): status is SubscriptionStatus {
 // 	};
 // }
 
-export type NewSubscriptionResponse = {
-    kind: "Subscription";
-    self: string;
-} & SubscriptionEntity;
-
-export function formatSubscriptionResponse(
-    subscription: SubscriptionEntity,
-): NewSubscriptionResponse {
-    return {
-        kind: "Subscription",
-        self: `/subscriptions/${subscription.id}`,
-        id: subscription.id,
-        name: subscription.name,
-        email: subscription.email,
-        status: subscription.status,
-    };
-}
+// export type NewSubscriptionResponse = {
+//     kind: "Subscription";
+//     self: string;
+// } & SubscriptionEntity;
+//
+// export function formatSubscriptionResponse(
+//     subscription: SubscriptionEntity,
+// ): NewSubscriptionResponse {
+//     return {
+//         kind: "Subscription",
+//         self: `/subscriptions/${subscription.id}`,
+//         id: subscription.id,
+//         name: subscription.name,
+//         email: subscription.email,
+//         status: subscription.status,
+//     };
+// }

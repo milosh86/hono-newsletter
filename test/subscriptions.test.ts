@@ -1,5 +1,19 @@
-import { describe, expect, test } from "vitest";
-import app from "../src";
+import { beforeEach, describe, expect, test } from "vitest";
+import { app } from "../src";
+import { configureDb } from "./helpers";
+
+const MOCK_ENV = {
+    DATABASE_URL: "example.com",
+};
+
+beforeEach(async () => {
+    const { testDbUrl } = await configureDb();
+    MOCK_ENV.DATABASE_URL = testDbUrl;
+
+    return async () => {
+        // cleanup code
+    };
+});
 
 describe("Subscriptions", () => {
     test("POST /subscriptions returns 201 for valid request data", async () => {
@@ -15,7 +29,7 @@ describe("Subscriptions", () => {
                 body: validBody,
                 headers: new Headers({ "Content-Type": "application/json" }),
             },
-            // MOCK_ENV,
+            MOCK_ENV,
         );
         expect(res.status).toBe(201);
     });
@@ -47,7 +61,7 @@ describe("Subscriptions", () => {
                         "Content-Type": "application/json",
                     }),
                 },
-                // MOCK_ENV,
+                MOCK_ENV,
             );
             expect(res.status, description).toBe(400);
         }
