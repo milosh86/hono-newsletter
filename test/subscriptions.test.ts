@@ -68,15 +68,15 @@ describe("Subscriptions", () => {
             [{ email: "test@test.com" }, "missing name"],
             [{ something: "else" }, "missing both name and email"],
             [{ name: "", email: "test@test.com" }, "empty name"],
-            // [
-            //     { name: "hello<>there{}", email: "test@test.com" },
-            //     "invalid name",
-            // ],
+            [
+                { name: "hello<>there{}", email: "test@test.com" },
+                "invalid name",
+            ],
             [{ name: "Test Name", email: "" }, "empty email"],
-            // [
-            //     { name: "Test Name", email: "definitely-not-an-email" },
-            //     "invalid email",
-            // ],
+            [
+                { name: "Test Name", email: "definitely-not-an-email" },
+                "invalid email",
+            ],
         ];
 
         for (const [body, description] of invalidBodiesPairs) {
