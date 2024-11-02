@@ -55,3 +55,34 @@ To check for vulnerabilities in the dependencies, run:
 ```
 npm audit
 ```
+
+## Database
+### DB local setup
+
+To set up the database in local, run:
+```
+./scripts/init_db.sh
+```
+
+It will:
+- run a new local instance of the Postgres database in the Docker
+- create a new application user with enough permissions to create a new database
+- create a new database for the application (APP_DB_NAME)
+- run the migrations, with drizzle-kit, to set up the database schema
+
+If you want to skip spinning up the new Postgres container, you can run the script 
+with the SKIP_DOCKER=true env variable. It will then use the existing Postgres
+instance and do other steps as usual.
+
+```
+### DB migrations and schema evolution
+We use `drizzle-kit` to manage database migrations. To create a new migration:
+
+- make sure `.env` file is set up with the correct database connection string, there is the `.env.example` file to use as a template
+- update the `src/db/schema.ts` file as needed
+- run `npx drizzle-kit generate --name=<migration_name>` to generate a new migration
+- run `npx drizzle-kit migrate` to apply the migration
+
+```
+npm run db:new-migration
+```
