@@ -87,6 +87,13 @@ We use `drizzle-kit` to manage database migrations. To create a new migration:
 npm run db:new-migration
 ```
 
+### Migrations in production
+- Make sure that DB backups are in place and that migrations are tested
+- Run the migration with:
+  ```sh
+  DATABASE_URL=<prod_db_url> npx drizzle-kit migrate
+  ```
+
 ## Environment variables
 
 To run the application, you need to set up the following environment variables:
@@ -110,3 +117,13 @@ TODO: check Cloudflare Secrets for storing sensitive data!
 4. Init `.dev.vars` file
 5. Run the database setup script with `./scripts/init_db.sh`
 6. Run the application with `npm run dev`
+
+## Deployment
+
+To deploy the application, you need to set up the Cloudflare account and an 
+instance of the Postgres database deployed. You can use the free tier for both 
+services.
+
+1. Run `npm run deploy` to deploy the application to the Cloudflare Workers
+2. Run the database migrations in the production environment
+3. Set up the environment variables and secrets in the Cloudflare Workers dashboard
