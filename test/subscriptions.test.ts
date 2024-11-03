@@ -1,6 +1,6 @@
 import postgres from "postgres";
 import { beforeEach, describe, expect, test } from "vitest";
-import { app } from "../src";
+import app from "../src";
 import { configureDb } from "./helpers";
 
 const MOCK_ENV = {

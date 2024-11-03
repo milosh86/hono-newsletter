@@ -1,17 +1,26 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { requestId } from "hono/request-id";
+import type { Logger } from "pino";
+import { pinoLogger } from "./middlewares/pino-logger";
 import { SubscriptionsService } from "./subscriptions/service";
 import { newSubscriptionRequestSchema } from "./subscriptions/validations";
+import { logger } from "./telemetry";
 
 type Bindings = {
     DATABASE_URL: string;
 };
 
-type Variables = Record<string, never>;
+type Variables = { requestLogger: Logger };
 
-export const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+
+app.use(requestId());
+app.use(pinoLogger(logger));
 
 app.get("/", (c) => {
+    const requestLogger = c.get("requestLogger");
+    requestLogger.info("Hello Hono request handling!");
     return c.text("Hello Hono!");
 });
 
@@ -26,17 +35,21 @@ app.post(
     zValidator("json", newSubscriptionRequestSchema),
     async (c) => {
         const newSubscriptionRequest = c.req.valid("json");
+        const requestLogger = c.get("requestLogger");
+
+        requestLogger.info("New subscription request", newSubscriptionRequest);
 
         try {
-            console.log("c.env.DATABASE_URL", c, newSubscriptionRequest);
             const subscriptionService = new SubscriptionsService(
                 c.env.DATABASE_URL,
             );
             await subscriptionService.saveSubscription(newSubscriptionRequest);
             return c.text("201 Created", 201);
         } catch (error) {
-            console.info("subscription error:", error);
+            requestLogger.warn(error, "subscription error");
             return c.text("500 Internal Error", 500);
         }
     },
 );
+
+export default app;
