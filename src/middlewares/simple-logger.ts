@@ -1,25 +1,22 @@
 import type { Context, MiddlewareHandler, Next } from "hono";
-import type { Logger } from "pino";
 
 import { getPath } from "hono/utils/url";
-import pino from "pino";
+import { SimpleLogger } from "../utils/simple-logger";
 
-export const pinoLogger = (
-    logger: Logger = pino({ level: "info" }),
+export const simpleLogger = (
+    logger = new SimpleLogger(),
 ): MiddlewareHandler => {
     return async (c: Context, next: Next) => {
         const { method } = c.req;
         const path = getPath(c.req.raw);
         const requestId = c.get("requestId");
 
-        logger.info({
+        logger.info("Request received", {
             requestId: requestId,
-            request: {
-                method,
-                path,
-            },
+            method,
+            path,
         });
-        const requestLogger = logger.child({ requestId });
+        const requestLogger = new SimpleLogger({ requestId });
         c.set("requestLogger", requestLogger);
         const start = Date.now();
 
@@ -27,13 +24,11 @@ export const pinoLogger = (
 
         const { status } = c.res;
 
-        logger.info({
+        logger.info("Request processed", {
             requestId: requestId,
-            response: {
-                status,
-                ok: String(c.res.ok),
-                time: time(start),
-            },
+            responseStatus: String(status),
+            responseOk: String(c.res.ok),
+            responseTime: time(start),
         });
     };
 };

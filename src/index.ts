@@ -2,10 +2,9 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { requestId } from "hono/request-id";
 import type { Logger } from "pino";
-import { pinoLogger } from "./middlewares/pino-logger";
+import { simpleLogger } from "./middlewares/simple-logger";
 import { SubscriptionsService } from "./subscriptions/service";
 import { newSubscriptionRequestSchema } from "./subscriptions/validations";
-import { logger } from "./telemetry";
 
 type Bindings = {
     DATABASE_URL: string;
@@ -16,11 +15,13 @@ type Variables = { requestLogger: Logger };
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 app.use(requestId());
-app.use(pinoLogger(logger));
+app.use(simpleLogger());
 
 app.get("/", (c) => {
     const requestLogger = c.get("requestLogger");
     requestLogger.info("Hello Hono request handling!");
+    requestLogger.warn("Hello Hono request warn!");
+    requestLogger.error("Hello Hono request error!");
     return c.text("Hello Hono!");
 });
 
