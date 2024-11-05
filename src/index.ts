@@ -1,16 +1,16 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { requestId } from "hono/request-id";
-import type { Logger } from "pino";
 import { simpleLogger } from "./middlewares/simple-logger";
 import { SubscriptionsService } from "./subscriptions/service";
 import { newSubscriptionRequestSchema } from "./subscriptions/validations";
+import type { SimpleLogger } from "./utils/simple-logger";
 
 type Bindings = {
     DATABASE_URL: string;
 };
 
-type Variables = { requestLogger: Logger };
+type Variables = { requestLogger: SimpleLogger };
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -47,7 +47,21 @@ app.post(
             await subscriptionService.saveSubscription(newSubscriptionRequest);
             return c.text("201 Created", 201);
         } catch (error) {
-            requestLogger.warn(error, "subscription error");
+            // TODO: extract to utility function
+            let errorData = {};
+
+            if (error instanceof Error) {
+                errorData = {
+                    error: error.message,
+                    stack: error.stack || "",
+                };
+            }
+
+            if (typeof error === "string") {
+                errorData = { error };
+            }
+
+            requestLogger.warn("subscription error", errorData);
             return c.text("500 Internal Error", 500);
         }
     },
