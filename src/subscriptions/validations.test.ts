@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { SubscriberEmail } from "./domain";
 import { subscriberEmailSchema, subscriberNameSchema } from "./validations";
 
 describe("Validations", () => {
@@ -29,5 +30,22 @@ describe("Validations", () => {
         expect(subscriberEmailSchema.safeParse(maximalEmail).success).toBe(
             true,
         );
+    });
+});
+
+describe("SubscriberEmail", () => {
+    test("empty string is rejected", async () => {
+        const email = "";
+        expect(() => SubscriberEmail.parse(email)).toThrow();
+    });
+
+    test("email missing @ symbol is rejected", async () => {
+        const email = "test.com";
+        expect(() => SubscriberEmail.parse(email)).toThrow();
+    });
+
+    test("email missing subject is rejected", async () => {
+        const email = "@test.com";
+        expect(() => SubscriberEmail.parse(email)).toThrow();
     });
 });
