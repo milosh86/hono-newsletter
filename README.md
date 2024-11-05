@@ -49,6 +49,8 @@ There are 2 types of tests:
 - Unit tests (inside /src folder): testing individual functionality without external dependencies
 - Integration tests (in /test folder) - testing the whole system with external dependencies and mocks where needed
 
+For some unit tests, property-based testing is exercised with the `fast-check` and `faker-js` libraries.
+
 ## Security audit
 
 To check for vulnerabilities in the dependencies, run:
