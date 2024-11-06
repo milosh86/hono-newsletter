@@ -8,6 +8,13 @@
       "when": 1730543776934,
       "tag": "0000_create_subscriptions_table",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1730909087115,
+      "tag": "0001_add_status_to_subscriptions",
+      "breakpoints": true
     }
   ]
 }

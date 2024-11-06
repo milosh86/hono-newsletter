@@ -4,6 +4,7 @@ export const subscriptionsTable = pgTable("subscriptions", {
     id: uuid().primaryKey(),
     email: text().notNull().unique(),
     name: text().notNull(),
+    status: text(),
     subscribed_at: timestamp().notNull(),
 });
 
