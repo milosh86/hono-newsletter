@@ -1,1 +1,4 @@
 DATABASE_URL="postgres://app:secret@localhost:5432/hono_newsletter"
+EMAIL_SENDER="your-sender-email"
+EMAIL_API_KEY="your-api-key"
+EMAIL_API_SECRET="your-api-secret"

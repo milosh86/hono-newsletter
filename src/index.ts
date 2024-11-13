@@ -2,12 +2,18 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { requestId } from "hono/request-id";
 import { simpleLogger } from "./middlewares/simple-logger";
+import { SubscriberEmail } from "./subscriptions/domain";
+import { EmailService } from "./subscriptions/email-service";
 import { SubscriptionsService } from "./subscriptions/service";
 import { newSubscriptionRequestSchema } from "./subscriptions/validations";
+import { parseError } from "./utils/error-handling";
 import type { SimpleLogger } from "./utils/simple-logger";
 
 type Bindings = {
     DATABASE_URL: string;
+    EMAIL_SENDER: string;
+    EMAIL_API_KEY: string;
+    EMAIL_API_SECRET: string;
 };
 
 type Variables = { requestLogger: SimpleLogger };
@@ -47,24 +53,42 @@ app.post(
             await subscriptionService.saveSubscription(newSubscriptionRequest);
             return c.text("201 Created", 201);
         } catch (error) {
-            // TODO: extract to utility function
-            let errorData = {};
-
-            if (error instanceof Error) {
-                errorData = {
-                    error: error.message,
-                    stack: error.stack || "",
-                };
-            }
-
-            if (typeof error === "string") {
-                errorData = { error };
-            }
+            const errorData = parseError(error);
 
             requestLogger.warn("subscription error", errorData);
             return c.text("500 Internal Error", 500);
         }
     },
 );
+
+app.get("/email", async (c) => {
+    const requestLogger = c.get("requestLogger");
+
+    requestLogger.info("New email request");
+
+    try {
+        const senderEmail = SubscriberEmail.parse(c.env.EMAIL_SENDER);
+        const apiKey = c.env.EMAIL_API_KEY;
+        const apiSecret = c.env.EMAIL_API_SECRET;
+        requestLogger.info("sender", {
+            senderEmail: senderEmail.toString(),
+            apiKey,
+        });
+        const emailService = new EmailService(senderEmail, apiKey, apiSecret);
+
+        await emailService.sendEmail({
+            to: SubscriberEmail.parse("bfvqrytxe@mozmail.com"),
+            subject: "Hello from Hono",
+            bodyHtml: "<h1>Hello Hono!</h1>",
+            bodyText: "Hello Hono!",
+        });
+        return c.text("200 OK", 200);
+    } catch (error) {
+        const errorData = parseError(error);
+
+        requestLogger.warn("email error", errorData);
+        return c.text("500 Internal Error", 500);
+    }
+});
 
 export default app;

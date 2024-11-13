@@ -129,3 +129,8 @@ services.
 1. Run `npm run deploy` to deploy the application to the Cloudflare Workers
 2. Run the database migrations in the production environment
 3. Set up the environment variables and secrets in the Cloudflare Workers dashboard
+
+## External services
+- Postgres database
+- Email service
+  - https://app.mailjet.com/
