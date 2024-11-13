@@ -22,6 +22,13 @@
       "when": 1731053867056,
       "tag": "0002_make_status_not_null_in_subscriptions",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1731509170139,
+      "tag": "0003_create_subscription_tokens_table",
+      "breakpoints": true
     }
   ]
 }

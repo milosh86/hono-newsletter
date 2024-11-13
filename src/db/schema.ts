@@ -9,3 +9,13 @@ export const subscriptionsTable = pgTable("subscriptions", {
 });
 
 export type SubscriptionsEntityDb = typeof subscriptionsTable.$inferSelect;
+
+export const subscriptionTokensTable = pgTable("subscription_tokens", {
+    subscription_token: text().primaryKey(),
+    subscriber_id: uuid()
+        .notNull()
+        .references(() => subscriptionsTable.id),
+});
+
+export type SubscriptionTokensEntityDb =
+    typeof subscriptionTokensTable.$inferSelect;
