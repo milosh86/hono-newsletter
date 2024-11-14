@@ -2,7 +2,7 @@ import type { SubscriberEmail } from "./domain";
 
 export class EmailService {
     sender: SubscriberEmail;
-    #credentials: string;
+    readonly #credentials: string;
 
     constructor(sender: SubscriberEmail, apiKey: string, apiSecret: string) {
         this.sender = sender;
@@ -42,7 +42,7 @@ export class EmailService {
             }),
         });
 
-        const responseBody: any = await response.json();
+        const responseBody: SendEmailResponse = await response.json();
 
         if (responseBody?.ErrorMessage) {
             throw new Error(JSON.stringify(responseBody));
@@ -57,3 +57,10 @@ export class EmailService {
         }
     }
 }
+
+type SendEmailResponse = {
+    ErrorMessage?: string;
+    Messages?: {
+        Status: string;
+    }[];
+};
