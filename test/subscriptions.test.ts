@@ -1,8 +1,14 @@
 import { faker } from "@faker-js/faker";
+import nock from "nock";
 import postgres from "postgres";
 import { beforeEach, describe, expect, test } from "vitest";
 import app from "../src";
-import { configureDb, setupEmailServiceSuccessMock } from "./helpers";
+import { SubscriptionStatus } from "../src/subscriptions/domain";
+import {
+    configureDb,
+    parseLinks,
+    setupEmailServiceSuccessMock,
+} from "./helpers";
 
 const MOCK_ENV = {
     DATABASE_URL: "example.com",
@@ -67,6 +73,9 @@ describe("Subscriptions", () => {
         expect(subscriptions.length).toBe(1);
         expect(subscriptions[0].name).toBe("Test Name");
         expect(subscriptions[0].email).toBe("test@test.com");
+        expect(subscriptions[0].status).toBe(
+            SubscriptionStatus.PendingConfirmation,
+        );
         expect(res.status).toBe(201);
     });
 
@@ -78,6 +87,51 @@ describe("Subscriptions", () => {
         });
 
         const scope = setupEmailServiceSuccessMock(MOCK_ENV.EMAIL_BASE_URL);
+
+        // act
+        await app.request(
+            "/subscriptions",
+            {
+                method: "POST",
+                body: validBody,
+                headers: new Headers({ "Content-Type": "application/json" }),
+            },
+            MOCK_ENV,
+        );
+
+        // assert
+        expect(scope.isDone()).toBe(true);
+    });
+
+    test("POST /subscriptions sends a confirmation email with links", async () => {
+        // arrange
+        const validBody = JSON.stringify({
+            name: faker.person.fullName(),
+            email: faker.internet.email(),
+        });
+
+        const scope = nock(MOCK_ENV.EMAIL_BASE_URL)
+            .post("/send", (body) => {
+                // assert part for body content
+                const message = body.Messages[0];
+
+                return (
+                    message.HTMLPart.includes(
+                        "https://there-is-no-such-domain.com/subscriptions/confirm",
+                    ) &&
+                    message.TextPart.includes(
+                        "https://there-is-no-such-domain.com/subscriptions/confirm",
+                    )
+                );
+            })
+            .once()
+            .reply(200, {
+                Messages: [
+                    {
+                        Status: "success",
+                    },
+                ],
+            });
 
         // act
         await app.request(

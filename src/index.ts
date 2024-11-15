@@ -66,11 +66,13 @@ app.post(
             await subscriptionService.saveSubscription(newSubscriptionRequest);
 
             requestLogger.info("Sending welcome email to subscriber");
+            const confirmationLink =
+                "https://there-is-no-such-domain.com/subscriptions/confirm";
             await emailService.sendEmail({
                 to: SubscriberEmail.parse(newSubscriptionRequest.email),
                 subject: "Welcome!",
-                bodyHtml: "Welcome to our newsletter!",
-                bodyText: "Welcome to our newsletter!",
+                bodyHtml: `Welcome to our newsletter! Please confirm your subscription by clicking <a href="${confirmationLink}">here</a>.`,
+                bodyText: `Welcome to our newsletter! Please confirm your subscription by clicking ${confirmationLink}.`,
             });
 
             return c.text("201 Created", 201);

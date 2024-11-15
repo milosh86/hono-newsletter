@@ -86,3 +86,9 @@ export function setupEmailServiceSuccessMock(baseUrl: string) {
             ],
         });
 }
+
+export function parseLinks(text: string): string[] {
+    const urlRegex = /https?:\/\/[^\s/$.?#].[^\s]*/g;
+    const matches = text.match(urlRegex);
+    return matches ? matches : [];
+}

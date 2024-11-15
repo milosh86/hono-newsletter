@@ -7,7 +7,7 @@ import { type NewSubscriptionRequest, SubscriptionStatus } from "./domain";
 export class SubscriptionsService {
     db: PostgresJsDatabase<Record<string, never>>;
 
-    constructor(private dbUrl: string) {
+    constructor(dbUrl: string) {
         this.db = getDb(dbUrl);
     }
 
@@ -17,7 +17,7 @@ export class SubscriptionsService {
             name: subscriptionRequest.name,
             email: subscriptionRequest.email,
             subscribed_at: new Date(),
-            status: SubscriptionStatus.Confirmed,
+            status: SubscriptionStatus.PendingConfirmation,
         };
 
         await this.db.insert(subscriptionsTable).values(subscription);
