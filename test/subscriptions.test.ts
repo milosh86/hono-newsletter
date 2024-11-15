@@ -1,10 +1,15 @@
+import { faker } from "@faker-js/faker";
 import postgres from "postgres";
 import { beforeEach, describe, expect, test } from "vitest";
 import app from "../src";
-import { configureDb } from "./helpers";
+import { configureDb, setupEmailServiceSuccessMock } from "./helpers";
 
 const MOCK_ENV = {
     DATABASE_URL: "example.com",
+    EMAIL_BASE_URL: "https://test-email-service.com",
+    EMAIL_SENDER: "test-sender@test.com",
+    EMAIL_API_KEY: "test-api-key",
+    EMAIL_API_SECRET: "test-api-secret",
 };
 
 beforeEach(async () => {
@@ -22,6 +27,7 @@ describe("Subscriptions", () => {
             name: "Test Name",
             email: "test.email@test.com",
         });
+        const _scope = setupEmailServiceSuccessMock(MOCK_ENV.EMAIL_BASE_URL);
 
         const res = await app.request(
             "/subscriptions",
@@ -38,6 +44,7 @@ describe("Subscriptions", () => {
     test("POST /subscriptions persists new subscriber", async () => {
         // arrange
         const sql = postgres(MOCK_ENV.DATABASE_URL);
+        setupEmailServiceSuccessMock(MOCK_ENV.EMAIL_BASE_URL);
         const validBody = JSON.stringify({
             name: "Test Name",
             email: "test@test.com",
@@ -60,6 +67,31 @@ describe("Subscriptions", () => {
         expect(subscriptions.length).toBe(1);
         expect(subscriptions[0].name).toBe("Test Name");
         expect(subscriptions[0].email).toBe("test@test.com");
+        expect(res.status).toBe(201);
+    });
+
+    test("POST /subscriptions sends a confirmation email to new subscriber", async () => {
+        // arrange
+        const validBody = JSON.stringify({
+            name: faker.person.fullName(),
+            email: faker.internet.email(),
+        });
+
+        const scope = setupEmailServiceSuccessMock(MOCK_ENV.EMAIL_BASE_URL);
+
+        // act
+        await app.request(
+            "/subscriptions",
+            {
+                method: "POST",
+                body: validBody,
+                headers: new Headers({ "Content-Type": "application/json" }),
+            },
+            MOCK_ENV,
+        );
+
+        // assert
+        expect(scope.isDone()).toBe(true);
     });
 
     test("POST /subscriptions returns 400 for invalid request data", async () => {

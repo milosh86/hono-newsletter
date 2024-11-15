@@ -2,18 +2,27 @@ import type { SubscriberEmail } from "./domain";
 
 export class EmailService {
     sender: SubscriberEmail;
+    readonly #baseUrl: string;
     readonly #credentials: string;
     readonly #timeout: number;
 
-    constructor(
-        sender: SubscriberEmail,
-        apiKey: string,
-        apiSecret: string,
+    constructor({
+        sender,
+        baseUrl,
+        apiKey,
+        apiSecret,
         timeout = 10_000,
-    ) {
+    }: {
+        sender: SubscriberEmail;
+        baseUrl: string;
+        apiKey: string;
+        apiSecret: string;
+        timeout?: number;
+    }) {
         this.sender = sender;
         this.#credentials = btoa(`${apiKey}:${apiSecret}`);
         this.#timeout = timeout;
+        this.#baseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
     }
 
     async sendEmail({
@@ -30,7 +39,7 @@ export class EmailService {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.#timeout);
 
-        const response = await fetch("https://api.mailjet.com/v3.1/send", {
+        const response = await fetch(`${this.#baseUrl}/send`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

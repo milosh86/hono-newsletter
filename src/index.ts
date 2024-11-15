@@ -11,6 +11,7 @@ import type { SimpleLogger } from "./utils/simple-logger";
 
 type Bindings = {
     DATABASE_URL: string;
+    EMAIL_BASE_URL: string;
     EMAIL_SENDER: string;
     EMAIL_API_KEY: string;
     EMAIL_API_SECRET: string;
@@ -47,10 +48,31 @@ app.post(
         requestLogger.info("New subscription request", newSubscriptionRequest);
 
         try {
+            const senderEmail = SubscriberEmail.parse(c.env.EMAIL_SENDER);
+            const baseUrl = c.env.EMAIL_BASE_URL;
+            const apiKey = c.env.EMAIL_API_KEY;
+            const apiSecret = c.env.EMAIL_API_SECRET;
+            const emailService = new EmailService({
+                sender: senderEmail,
+                baseUrl,
+                apiKey,
+                apiSecret,
+            });
             const subscriptionService = new SubscriptionsService(
                 c.env.DATABASE_URL,
             );
+
+            requestLogger.info("Inserting new subscriber into DB");
             await subscriptionService.saveSubscription(newSubscriptionRequest);
+
+            requestLogger.info("Sending welcome email to subscriber");
+            await emailService.sendEmail({
+                to: SubscriberEmail.parse(newSubscriptionRequest.email),
+                subject: "Welcome!",
+                bodyHtml: "Welcome to our newsletter!",
+                bodyText: "Welcome to our newsletter!",
+            });
+
             return c.text("201 Created", 201);
         } catch (error) {
             const errorData = parseError(error);
@@ -68,13 +90,19 @@ app.get("/email", async (c) => {
 
     try {
         const senderEmail = SubscriberEmail.parse(c.env.EMAIL_SENDER);
+        const baseUrl = c.env.EMAIL_BASE_URL;
         const apiKey = c.env.EMAIL_API_KEY;
         const apiSecret = c.env.EMAIL_API_SECRET;
         requestLogger.info("sender", {
             senderEmail: senderEmail.toString(),
             apiKey,
         });
-        const emailService = new EmailService(senderEmail, apiKey, apiSecret);
+        const emailService = new EmailService({
+            sender: senderEmail,
+            baseUrl,
+            apiKey,
+            apiSecret,
+        });
 
         await emailService.sendEmail({
             to: SubscriberEmail.parse("bfvqrytxe@mozmail.com"),

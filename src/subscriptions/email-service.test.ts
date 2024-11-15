@@ -5,7 +5,7 @@ import { SubscriberEmail } from "./domain";
 import { EmailService } from "./email-service";
 
 describe("Email Service", () => {
-    const EMAIL_SERVICE_API = "https://api.mailjet.com/v3.1";
+    const EMAIL_SERVICE_API = "https://test-email-service.com";
     const testParams = {
         to: SubscriberEmail.parse("user@test.com"),
         subject: "Test subject",
@@ -13,15 +13,26 @@ describe("Email Service", () => {
         bodyText: "Test body",
     };
 
+    function createEmailService(timeout?: number) {
+        return new EmailService({
+            sender: SubscriberEmail.parse("test@test.com"),
+            baseUrl: EMAIL_SERVICE_API,
+            apiKey: "api-key",
+            apiSecret: "api-secret",
+            timeout: timeout,
+        });
+    }
+
     test("send success", async () => {
         // arrange
         const senderEmail = SubscriberEmail.parse(faker.internet.email());
         const receiverEmail = SubscriberEmail.parse(faker.internet.email());
-        const emailService = new EmailService(
-            senderEmail,
-            "api-key",
-            "api-secret",
-        );
+        const emailService = new EmailService({
+            sender: senderEmail,
+            baseUrl: EMAIL_SERVICE_API,
+            apiKey: "api-key",
+            apiSecret: "api-secret",
+        });
         const subject = faker.lorem.sentence();
         const content = faker.lorem.paragraphs({ min: 1, max: 10 });
 
@@ -69,11 +80,7 @@ describe("Email Service", () => {
     });
 
     test("send failure - invalid request param", async () => {
-        const emailService = new EmailService(
-            SubscriberEmail.parse("test@test.com"),
-            "api-key",
-            "api-secret",
-        );
+        const emailService = createEmailService();
 
         nock(EMAIL_SERVICE_API)
             .post("/send")
@@ -82,22 +89,13 @@ describe("Email Service", () => {
                 ErrorMessage: "Failed to send email",
             });
 
-        await expect(
-            emailService.sendEmail({
-                to: SubscriberEmail.parse("user@test.com"),
-                subject: "Test subject",
-                bodyHtml: "<h1>Test body</h1>",
-                bodyText: "Test body",
-            }),
-        ).rejects.toThrow("Failed to send email");
+        await expect(emailService.sendEmail(testParams)).rejects.toThrow(
+            "Failed to send email",
+        );
     });
 
     test("send failure - invalid message param", async () => {
-        const emailService = new EmailService(
-            SubscriberEmail.parse("test@test.com"),
-            "api-key",
-            "api-secret",
-        );
+        const emailService = createEmailService();
 
         nock(EMAIL_SERVICE_API)
             .post("/send")
@@ -111,22 +109,13 @@ describe("Email Service", () => {
                 ],
             });
 
-        await expect(
-            emailService.sendEmail({
-                to: SubscriberEmail.parse("user@test.com"),
-                subject: "Test subject",
-                bodyHtml: "<h1>Test body</h1>",
-                bodyText: "Test body",
-            }),
-        ).rejects.toThrow("Failed to send email 1");
+        await expect(emailService.sendEmail(testParams)).rejects.toThrow(
+            "Failed to send email 1",
+        );
     });
 
     test("send failure - server 400 and 500", async () => {
-        const emailService = new EmailService(
-            SubscriberEmail.parse("test@test.com"),
-            "api-key",
-            "api-secret",
-        );
+        const emailService = createEmailService();
 
         nock(EMAIL_SERVICE_API)
             // emulate server errors
@@ -144,12 +133,7 @@ describe("Email Service", () => {
     });
 
     test("send failure - network delay (timeout)", async () => {
-        const emailService = new EmailService(
-            SubscriberEmail.parse("test@test.com"),
-            "api-key",
-            "api-secret",
-            100,
-        );
+        const emailService = createEmailService(100);
 
         nock(EMAIL_SERVICE_API)
             // emulate slow server, still replying with success

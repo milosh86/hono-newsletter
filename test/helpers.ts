@@ -1,6 +1,7 @@
 import { execSync } from "node:child_process";
 import { Faker, type Randomizer, base, en, es, fr, ru } from "@faker-js/faker";
 import fc from "fast-check";
+import nock from "nock";
 import postgres from "postgres";
 
 interface DbConfig {
@@ -71,4 +72,17 @@ export function fakerToArb<TValue>(
     generator: (faker: Faker) => TValue,
 ): fc.Arbitrary<TValue> {
     return new FakerBuilder(generator);
+}
+
+export function setupEmailServiceSuccessMock(baseUrl: string) {
+    return nock(baseUrl)
+        .post("/send")
+        .once()
+        .reply(200, {
+            Messages: [
+                {
+                    Status: "success",
+                },
+            ],
+        });
 }
