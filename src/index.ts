@@ -6,20 +6,10 @@ import { SubscriberEmail } from "./subscriptions/domain";
 import { EmailService } from "./subscriptions/email-service";
 import { SubscriptionsService } from "./subscriptions/service";
 import { newSubscriptionRequestSchema } from "./subscriptions/validations";
+import type { EnvBindings, Variables } from "./types";
 import { parseError } from "./utils/error-handling";
-import type { SimpleLogger } from "./utils/simple-logger";
 
-type Bindings = {
-    DATABASE_URL: string;
-    EMAIL_BASE_URL: string;
-    EMAIL_SENDER: string;
-    EMAIL_API_KEY: string;
-    EMAIL_API_SECRET: string;
-};
-
-type Variables = { requestLogger: SimpleLogger };
-
-const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+const app = new Hono<{ Bindings: EnvBindings; Variables: Variables }>();
 
 app.use(requestId());
 app.use(simpleLogger());
@@ -48,32 +38,12 @@ app.post(
         requestLogger.info("New subscription request", newSubscriptionRequest);
 
         try {
-            const senderEmail = SubscriberEmail.parse(c.env.EMAIL_SENDER);
-            const baseUrl = c.env.EMAIL_BASE_URL;
-            const apiKey = c.env.EMAIL_API_KEY;
-            const apiSecret = c.env.EMAIL_API_SECRET;
-            const emailService = new EmailService({
-                sender: senderEmail,
-                baseUrl,
-                apiKey,
-                apiSecret,
-            });
             const subscriptionService = new SubscriptionsService(
-                c.env.DATABASE_URL,
+                c.env,
+                requestLogger,
             );
 
-            requestLogger.info("Inserting new subscriber into DB");
             await subscriptionService.saveSubscription(newSubscriptionRequest);
-
-            requestLogger.info("Sending welcome email to subscriber");
-            const confirmationLink =
-                "https://there-is-no-such-domain.com/subscriptions/confirm";
-            await emailService.sendEmail({
-                to: SubscriberEmail.parse(newSubscriptionRequest.email),
-                subject: "Welcome!",
-                bodyHtml: `Welcome to our newsletter! Please confirm your subscription by clicking <a href="${confirmationLink}">here</a>.`,
-                bodyText: `Welcome to our newsletter! Please confirm your subscription by clicking ${confirmationLink}.`,
-            });
 
             return c.text("201 Created", 201);
         } catch (error) {
