@@ -3,7 +3,8 @@
     "scripts": {
         "lint": "npx @biomejs/biome lint --write ./src",
         "check": "npx @biomejs/biome check ./src",
-        "test": "npx vitest",
+        "test": "npx vitest --silent",
+        "test:with-logs": "npx vitest",
         "dev": "wrangler dev",
         "deploy": "wrangler deploy --minify"
     },
