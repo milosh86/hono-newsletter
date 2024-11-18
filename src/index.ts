@@ -66,6 +66,27 @@ app.get(
         const requestLogger = c.get("requestLogger");
         requestLogger.info("Confirming subscription", { token });
 
+        try {
+            const subscriptionService = new SubscriptionsService(
+                c.env,
+                requestLogger,
+            );
+
+            const subscriberId =
+                await subscriptionService.getSubscriberIdFromToken(token);
+
+            if (!subscriberId) {
+                return c.text("401 Unauthorized", 401);
+            }
+
+            await subscriptionService.confirmSubscription(subscriberId);
+        } catch (error) {
+            const errorData = parseError(error);
+
+            requestLogger.warn("subscription confirmation error", errorData);
+            return c.text("500 Internal Error", 500);
+        }
+
         return c.text("200 OK", 200);
     },
 );
