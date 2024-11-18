@@ -106,6 +106,21 @@ describe("Subscription Confirmation", () => {
         expect(res.status).toBe(200);
     });
 
+    test("GET /subscriptions/confirm returns 401 for unknown subscription token", async () => {
+        // arrange
+        const { confirmationToken } = await createSubscription();
+
+        // act
+        const res = await app.request(
+            "/subscriptions/confirm?token=unknown-token-1234567890",
+            {},
+            MOCK_ENV,
+        );
+
+        // assert
+        expect(res.status).toBe(401);
+    });
+
     test("Clicking on the confirmation link confirms a subscriber", async () => {
         // arrange
         const sql = postgres(MOCK_ENV.DATABASE_URL);
