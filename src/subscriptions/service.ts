@@ -58,7 +58,7 @@ export class SubscriptionsService {
 
     private async sendWelcomeEmail(subscriberEmail: SubscriberEmail) {
         const confirmationLink =
-            "https://there-is-no-such-domain.com/subscriptions/confirm";
+            "https://there-is-no-such-domain.com/subscriptions/confirm?token=123456789012";
 
         await this.emailService.sendEmail({
             to: subscriberEmail,

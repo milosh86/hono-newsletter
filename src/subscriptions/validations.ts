@@ -17,3 +17,7 @@ export const newSubscriptionRequestSchema = z.object({
     name: subscriberNameSchema,
     email: subscriberEmailSchema,
 });
+
+export const confirmSubscriptionParamsSchema = z.object({
+    token: z.string().max(20),
+});

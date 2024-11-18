@@ -4,11 +4,7 @@ import postgres from "postgres";
 import { beforeEach, describe, expect, test } from "vitest";
 import app from "../src";
 import { SubscriptionStatus } from "../src/subscriptions/domain";
-import {
-    configureDb,
-    parseLinks,
-    setupEmailServiceSuccessMock,
-} from "./helpers";
+import { configureDb, setupEmailServiceSuccessMock } from "./helpers";
 
 const MOCK_ENV = {
     DATABASE_URL: "example.com",

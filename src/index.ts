@@ -5,7 +5,10 @@ import { simpleLogger } from "./middlewares/simple-logger";
 import { SubscriberEmail } from "./subscriptions/domain";
 import { EmailService } from "./subscriptions/email-service";
 import { SubscriptionsService } from "./subscriptions/service";
-import { newSubscriptionRequestSchema } from "./subscriptions/validations";
+import {
+    confirmSubscriptionParamsSchema,
+    newSubscriptionRequestSchema,
+} from "./subscriptions/validations";
 import type { EnvBindings, Variables } from "./types";
 import { parseError } from "./utils/error-handling";
 
@@ -55,40 +58,16 @@ app.post(
     },
 );
 
-app.get("/email", async (c) => {
-    const requestLogger = c.get("requestLogger");
+app.get(
+    "/subscriptions/confirm",
+    zValidator("query", confirmSubscriptionParamsSchema),
+    async (c) => {
+        const { token } = c.req.valid("query");
+        const requestLogger = c.get("requestLogger");
+        requestLogger.info("Confirming subscription", { token });
 
-    requestLogger.info("New email request");
-
-    try {
-        const senderEmail = SubscriberEmail.parse(c.env.EMAIL_SENDER);
-        const baseUrl = c.env.EMAIL_BASE_URL;
-        const apiKey = c.env.EMAIL_API_KEY;
-        const apiSecret = c.env.EMAIL_API_SECRET;
-        requestLogger.info("sender", {
-            senderEmail: senderEmail.toString(),
-            apiKey,
-        });
-        const emailService = new EmailService({
-            sender: senderEmail,
-            baseUrl,
-            apiKey,
-            apiSecret,
-        });
-
-        await emailService.sendEmail({
-            to: SubscriberEmail.parse("bfvqrytxe@mozmail.com"),
-            subject: "Hello from Hono",
-            bodyHtml: "<h1>Hello Hono!</h1>",
-            bodyText: "Hello Hono!",
-        });
         return c.text("200 OK", 200);
-    } catch (error) {
-        const errorData = parseError(error);
-
-        requestLogger.warn("email error", errorData);
-        return c.text("500 Internal Error", 500);
-    }
-});
+    },
+);
 
 export default app;

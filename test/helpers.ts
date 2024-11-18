@@ -74,9 +74,15 @@ export function fakerToArb<TValue>(
     return new FakerBuilder(generator);
 }
 
-export function setupEmailServiceSuccessMock(baseUrl: string) {
+export function setupEmailServiceSuccessMock(
+    baseUrl: string,
+    onBodyReceived?: (body: unknown) => void,
+) {
     return nock(baseUrl)
-        .post("/send")
+        .post("/send", (body) => {
+            onBodyReceived?.(body);
+            return true;
+        })
         .once()
         .reply(200, {
             Messages: [
@@ -85,10 +91,4 @@ export function setupEmailServiceSuccessMock(baseUrl: string) {
                 },
             ],
         });
-}
-
-export function parseLinks(text: string): string[] {
-    const urlRegex = /https?:\/\/[^\s/$.?#].[^\s]*/g;
-    const matches = text.match(urlRegex);
-    return matches ? matches : [];
 }
