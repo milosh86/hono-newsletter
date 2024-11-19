@@ -34,12 +34,23 @@ export class SubscriptionsService {
     }
 
     async saveSubscription(subscriptionRequest: NewSubscriptionRequest) {
-        this.requestLogger.info("Inserting new subscriber into DB");
-        const { id } = await this.insertSubscription(subscriptionRequest);
+        const token = await this.db.transaction(async (tx) => {
+            this.requestLogger.info("Inserting new subscriber into DB");
+            const { id } = await this.insertSubscription({
+                tx,
+                subscriptionRequest,
+            });
 
-        this.requestLogger.info("Storing subscription token");
-        const token = this.generateSubscriptionToken();
-        await this.storeSubscriptionToken(id, token);
+            this.requestLogger.info("Storing subscription token");
+            const token = this.generateSubscriptionToken();
+            await this.storeSubscriptionToken({
+                tx,
+                subscriberId: id,
+                token,
+            });
+
+            return token;
+        });
 
         this.requestLogger.info("Sending welcome email to subscriber");
         await this.sendWelcomeEmail(
@@ -48,9 +59,13 @@ export class SubscriptionsService {
         );
     }
 
-    private async insertSubscription(
-        subscriptionRequest: NewSubscriptionRequest,
-    ) {
+    private async insertSubscription({
+        tx,
+        subscriptionRequest,
+    }: {
+        subscriptionRequest: NewSubscriptionRequest;
+        tx: PostgresJsDatabase;
+    }) {
         const subscription: typeof subscriptionsTable.$inferInsert = {
             id: uuidV4(),
             name: subscriptionRequest.name,
@@ -59,7 +74,7 @@ export class SubscriptionsService {
             status: SubscriptionStatus.PendingConfirmation,
         };
 
-        await this.db.insert(subscriptionsTable).values(subscription);
+        await tx.insert(subscriptionsTable).values(subscription);
 
         return subscription;
     }
@@ -83,16 +98,22 @@ export class SubscriptionsService {
         return uuid.replace(/-/g, "");
     }
 
-    private async storeSubscriptionToken(subscriberId: string, token: string) {
+    private async storeSubscriptionToken({
+        subscriberId,
+        token,
+        tx,
+    }: {
+        subscriberId: string;
+        token: string;
+        tx: PostgresJsDatabase;
+    }) {
         const subscriptionTokenEntry: typeof subscriptionTokensTable.$inferInsert =
             {
                 subscriber_id: subscriberId,
                 subscription_token: token,
             };
 
-        await this.db
-            .insert(subscriptionTokensTable)
-            .values(subscriptionTokenEntry);
+        await tx.insert(subscriptionTokensTable).values(subscriptionTokenEntry);
     }
 
     confirmSubscription(subscriberId: string) {

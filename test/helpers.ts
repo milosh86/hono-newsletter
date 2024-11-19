@@ -3,7 +3,7 @@ import { Faker, type Randomizer, base, en, es, fr, ru } from "@faker-js/faker";
 import fc from "fast-check";
 import nock from "nock";
 import postgres from "postgres";
-
+import { v4 as uuidV4 } from "uuid";
 interface DbConfig {
     host: string;
     port: number;
@@ -19,14 +19,12 @@ export async function configureDb() {
         password: "password",
         database: "postgres", // Connect to the default database to create a new one
     };
-    const testDbName = "integration_test_db";
+    const testDbName = `integration_test_db_${uuidV4().replace(/-/g, "_")}`;
 
     const sql = postgres(dbConfig);
 
     try {
         // db or column names can't be parameterized! That's why unsafe is used.
-        // Drop the test database if it exists
-        await sql.unsafe(`DROP DATABASE IF EXISTS ${testDbName} WITH (FORCE);`);
         // Create a new test database
         await sql.unsafe(`CREATE DATABASE ${testDbName};`);
     } finally {

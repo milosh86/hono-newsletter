@@ -33,7 +33,7 @@ app.get("/health_check", (c) => {
 
 app.post(
     "/subscriptions",
-    zValidator("json", newSubscriptionRequestSchema),
+    zValidator("json", newSubscriptionRequestSchema), // throws 400 if validation fails!
     async (c) => {
         const newSubscriptionRequest = c.req.valid("json");
         const requestLogger = c.get("requestLogger");
