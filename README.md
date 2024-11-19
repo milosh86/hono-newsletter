@@ -100,11 +100,16 @@ npm run db:new-migration
 
 To run the application, you need to set up the following environment variables:
 - `DATABASE_URL`: connection string to the Postgres database
+- `EMAIL_BASE_URL`: base URL for the email service
+- `EMAIL_SENDER`: email address of the sender
+- `EMAIL_API_KEY`: API key for the email service. Set up as a secret in Cloudflare. See [Mailjet docs](https://dev.mailjet.com/email/guides/send-api-v31)
+- `EMAIL_API_SECRET`: API secret for the email service. Set up as a secret in Cloudflare. See [Mailjet docs](https://dev.mailjet.com/email/guides/send-api-v31)
 
 In Cloudflare Workers case, you can set up the environment variables in the 
 `wrangler.toml` file. For local development, you should use the `.dev.vars` file.
 Please use the `.dev.vars.example` file as a template. Please note that `.env` 
-file is used only for the database migrations by `drizzle-kit`.
+file is used only for the database migrations by `drizzle-kit`, and it requires 
+only the `DATABASE_URL` variable to be set up.
 
 For more information check https://developers.cloudflare.com/workers/configuration/environment-variables/
 
