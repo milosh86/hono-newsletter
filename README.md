@@ -99,22 +99,26 @@ npm run db:new-migration
 ## Environment variables
 
 To run the application, you need to set up the following environment variables:
-- `DATABASE_URL`: connection string to the Postgres database
+- `DATABASE_URL`: (SECRET) connection string to the Postgres database
 - `EMAIL_BASE_URL`: base URL for the email service
 - `EMAIL_SENDER`: email address of the sender
-- `EMAIL_API_KEY`: API key for the email service. Set up as a secret in Cloudflare. See [Mailjet docs](https://dev.mailjet.com/email/guides/send-api-v31)
-- `EMAIL_API_SECRET`: API secret for the email service. Set up as a secret in Cloudflare. See [Mailjet docs](https://dev.mailjet.com/email/guides/send-api-v31)
+- `EMAIL_API_KEY`: (SECRET) API key for the email service. Set up as a secret in Cloudflare. See [Mailjet docs](https://dev.mailjet.com/email/guides/send-api-v31)
+- `EMAIL_API_SECRET`: (SECRET) API secret for the email service. Set up as a secret in Cloudflare. See [Mailjet docs](https://dev.mailjet.com/email/guides/send-api-v31)
 
-In Cloudflare Workers case, you can set up the environment variables in the 
-`wrangler.toml` file. For local development, you should use the `.dev.vars` file.
-Please use the `.dev.vars.example` file as a template. Please note that `.env` 
-file is used only for the database migrations by `drizzle-kit`, and it requires 
-only the `DATABASE_URL` variable to be set up.
+### How to properly set up environment variables
+
+- Env variables (non-secret) used in production, set in `wrangler.toml` file
+- Secrets used in production, set either in Cloudflare Workers dashboard or by using wrangler CLI
+- For local development, use the `.dev.vars` file. 
+  - It overrides the environment variables set in the `wrangler.toml` file
+  - Dev secret variables should be set up in the `.dev.vars` file too
+  - It is git-ignored and should not be committed to the repository.
+  - Use the `.dev.vars.example` file as a template
+- The `.env` file is used only for database migrations by drizzle-kit and requires only the DATABASE_URL variable
+  - It is git-ignored and should not be committed to the repository.
+  - Use the `.env.example` file as a template
 
 For more information check https://developers.cloudflare.com/workers/configuration/environment-variables/
-
-TODO: check Cloudflare Secrets for storing sensitive data!
-
 
 ## Getting started with development
 
@@ -134,6 +138,20 @@ services.
 1. Run `npm run deploy` to deploy the application to the Cloudflare Workers
 2. Run the database migrations in the production environment
 3. Set up the environment variables and secrets in the Cloudflare Workers dashboard
+
+### Gradual updates
+
+To gradually deploy new versions, you can route only a part of the traffic to the 
+new version of the application during the transition period! 
+
+See the [Cloudflare Workers documentation](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/gradual-deployments/) for more information.
+
+- Create new version of the worker
+  - `npx wrangler versions upload`
+  - Don't forget to set new env variables and secrets if needed
+- Create a new deployment that splits traffic between two versions of the Worker
+  - `npx wrangler versions deploy`
+- Monitor the new version and gradually increase the traffic to it
 
 ## External services
 - Postgres database

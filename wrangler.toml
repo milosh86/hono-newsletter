@@ -4,8 +4,12 @@ compatibility_date = "2024-11-01"
 
 compatibility_flags = [ "nodejs_compat" ]
 
-# [vars]
-# MY_VAR = "my-variable"
+ [vars]
+# DATABASE_URL = "secret"
+ EMAIL_BASE_URL = "https://api.mailjet.com/v3.1"
+ EMAIL_SENDER = "vjjv6ujvs@mozmail.com"
+# EMAIL_API_KEY = "secret"
+# EMAIL_API_SECRET = "secret"
 
 # [[kv_namespaces]]
 # binding = "MY_KV_NAMESPACE"
