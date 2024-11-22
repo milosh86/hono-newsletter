@@ -2,8 +2,6 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { requestId } from "hono/request-id";
 import { simpleLogger } from "./middlewares/simple-logger";
-import { SubscriberEmail } from "./subscriptions/domain";
-import { EmailService } from "./subscriptions/email-service";
 import { SubscriptionsService } from "./subscriptions/service";
 import {
     confirmSubscriptionParamsSchema,

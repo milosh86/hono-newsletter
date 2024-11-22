@@ -2,9 +2,14 @@ import { faker } from "@faker-js/faker";
 import postgres from "postgres";
 import { beforeEach, describe, expect, test } from "vitest";
 import app from "../src";
-import { configureDb, setupEmailServiceSuccessMock } from "./helpers";
+import {
+    configureDb,
+    extractTokenFromEmail,
+    setupEmailServiceSuccessMock,
+} from "./helpers";
 
 const MOCK_ENV = {
+    APP_BASE_URL: "https://test-app.com",
     DATABASE_URL: "example.com",
     EMAIL_BASE_URL: "https://test-email-service.com",
     EMAIL_SENDER: "test-sender@test.com",
@@ -37,24 +42,6 @@ async function createSubscription() {
     const token = extractTokenFromEmail(emailBody);
 
     return { requestData: validBody, confirmationToken: token };
-}
-
-function extractTokenFromEmail(emailBody: string) {
-    const urlRegex =
-        /https:\/\/there-is-no-such-domain\.com\/subscriptions\/confirm\?token=([a-zA-Z0-9]+)/;
-    const match = emailBody.match(urlRegex);
-
-    if (!match) {
-        throw new Error(
-            `No confirmation link found in email body: ${emailBody}`,
-        );
-    }
-    // expect(
-    //     match,
-    //     `No confirmation link found in email body: ${emailBody}`,
-    // ).not.toBeNull();
-
-    return match[1];
 }
 
 type EmailRequest = {

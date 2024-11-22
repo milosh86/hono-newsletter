@@ -90,3 +90,31 @@ export function setupEmailServiceSuccessMock(
             ],
         });
 }
+
+// TODO: refactor MOCK_ENV and beforeEach
+export const MOCK_ENV = {
+    APP_BASE_URL: "https://test-app.com",
+    DATABASE_URL: "example.com",
+    EMAIL_BASE_URL: "https://test-email-service.com",
+    EMAIL_SENDER: "test-sender@test.com",
+    EMAIL_API_KEY: "test-api-key",
+    EMAIL_API_SECRET: "test-api-secret",
+};
+
+export function extractTokenFromEmail(emailBody: string) {
+    const urlRegex =
+        /https?:\/\/[^\s]+?\?[^\s]*?token=([a-f0-9]{32})(?:&[^\s]*)?/;
+    const match = emailBody.match(urlRegex);
+
+    if (!match) {
+        throw new Error(
+            `No confirmation link found in email body: ${emailBody}`,
+        );
+    }
+    // expect(
+    //     match,
+    //     `No confirmation link found in email body: ${emailBody}`,
+    // ).not.toBeNull();
+
+    return match[1];
+}

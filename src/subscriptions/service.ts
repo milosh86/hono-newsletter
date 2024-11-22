@@ -13,13 +13,17 @@ import {
 import { EmailService } from "./email-service";
 
 export class SubscriptionsService {
-    db: PostgresJsDatabase<Record<string, never>>;
+    db: PostgresJsDatabase;
     requestLogger: SimpleLogger;
     emailService: EmailService;
+    appBaseUrl: string;
 
     constructor(env: EnvBindings, requestLogger: SimpleLogger) {
         this.db = getDb(env.DATABASE_URL);
         this.requestLogger = requestLogger;
+        this.appBaseUrl = env.APP_BASE_URL.endsWith("/")
+            ? env.APP_BASE_URL.slice(0, -1)
+            : env.APP_BASE_URL;
 
         const senderEmail = SubscriberEmail.parse(env.EMAIL_SENDER);
         const baseUrl = env.EMAIL_BASE_URL;
@@ -83,7 +87,7 @@ export class SubscriptionsService {
         subscriberEmail: SubscriberEmail,
         subscriptionToken: string,
     ) {
-        const confirmationLink = `https://there-is-no-such-domain.com/subscriptions/confirm?token=${subscriptionToken}`;
+        const confirmationLink = `${this.appBaseUrl}/subscriptions/confirm?token=${subscriptionToken}`;
 
         await this.emailService.sendEmail({
             to: subscriberEmail,

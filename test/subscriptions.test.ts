@@ -7,6 +7,7 @@ import { SubscriptionStatus } from "../src/subscriptions/domain";
 import { configureDb, setupEmailServiceSuccessMock } from "./helpers";
 
 const MOCK_ENV = {
+    APP_BASE_URL: "https://test-app.com",
     DATABASE_URL: "example.com",
     EMAIL_BASE_URL: "https://test-email-service.com",
     EMAIL_SENDER: "test-sender@test.com",
@@ -113,10 +114,10 @@ describe("Subscriptions", () => {
 
                 return (
                     message.HTMLPart.includes(
-                        "https://there-is-no-such-domain.com/subscriptions/confirm",
+                        "https://test-app.com/subscriptions/confirm",
                     ) &&
                     message.TextPart.includes(
-                        "https://there-is-no-such-domain.com/subscriptions/confirm",
+                        "https://test-app.com/subscriptions/confirm",
                     )
                 );
             })

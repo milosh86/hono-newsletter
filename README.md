@@ -99,6 +99,7 @@ npm run db:new-migration
 ## Environment variables
 
 To run the application, you need to set up the following environment variables:
+- `APP_BASE_URL`: Application base URL, used for generating links in the emails
 - `DATABASE_URL`: (SECRET) connection string to the Postgres database
 - `EMAIL_BASE_URL`: base URL for the email service
 - `EMAIL_SENDER`: email address of the sender

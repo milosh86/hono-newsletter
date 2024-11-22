@@ -1,6 +1,7 @@
 import type { SimpleLogger } from "./utils/simple-logger";
 
 export type EnvBindings = {
+    APP_BASE_URL: string;
     DATABASE_URL: string;
     EMAIL_BASE_URL: string;
     EMAIL_SENDER: string;
