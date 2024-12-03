@@ -9,7 +9,7 @@ export function parseError(error: unknown): ErrorData {
     if (error instanceof Error) {
         errorData = {
             error: error.message,
-            stack: error.stack || "",
+            // stack: error.stack || "", TODO: do we need to log stack?
         };
     }
 
