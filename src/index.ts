@@ -89,4 +89,10 @@ app.get(
     },
 );
 
+app.post("/newsletters", async (c) => {
+    const requestLogger = c.get("requestLogger");
+    requestLogger.info("New newsletter request");
+    return c.text("200 OK", 200);
+});
+
 export default app;
