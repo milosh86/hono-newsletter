@@ -1,9 +1,23 @@
 import { execSync } from "node:child_process";
-import { Faker, type Randomizer, base, en, es, fr, ru } from "@faker-js/faker";
+import {
+    Faker,
+    type Randomizer,
+    base,
+    en,
+    es,
+    faker,
+    fr,
+    ru,
+} from "@faker-js/faker";
 import fc from "fast-check";
 import nock from "nock";
 import postgres from "postgres";
 import { v4 as uuidV4 } from "uuid";
+import type app from "../src";
+import type { EnvBindings } from "../src/types";
+
+type HonoApp = typeof app;
+
 interface DbConfig {
     host: string;
     port: number;
@@ -11,6 +25,7 @@ interface DbConfig {
     password: string;
     database: string;
 }
+
 export async function configureDb() {
     const dbConfig: DbConfig = {
         host: "localhost",
@@ -91,16 +106,6 @@ export function setupEmailServiceSuccessMock(
         });
 }
 
-// TODO: refactor MOCK_ENV and beforeEach
-export const MOCK_ENV = {
-    APP_BASE_URL: "https://test-app.com",
-    DATABASE_URL: "example.com",
-    EMAIL_BASE_URL: "https://test-email-service.com",
-    EMAIL_SENDER: "test-sender@test.com",
-    EMAIL_API_KEY: "test-api-key",
-    EMAIL_API_SECRET: "test-api-secret",
-};
-
 export function extractTokenFromEmail(emailBody: string) {
     const urlRegex =
         /https?:\/\/[^\s]+?\?[^\s]*?token=([a-f0-9]{32})(?:&[^\s]*)?/;
@@ -117,4 +122,73 @@ export function extractTokenFromEmail(emailBody: string) {
     // ).not.toBeNull();
 
     return match[1];
+}
+
+type EmailRequest = {
+    Messages: {
+        From: {
+            Email: string;
+            Name: string;
+        };
+        To: {
+            Email: string;
+        }[];
+        Subject: string;
+        HTMLPart: string;
+        TextPart: string;
+    }[];
+};
+
+function isEmailRequest(body: unknown): body is EmailRequest {
+    return !!body && Array.isArray((body as EmailRequest).Messages);
+}
+
+export async function createUnconfirmedSubscription({
+    app,
+    mockEnv,
+}: { app: HonoApp; mockEnv: EnvBindings }) {
+    let receivedBody: EmailRequest | undefined;
+    setupEmailServiceSuccessMock(mockEnv.EMAIL_BASE_URL, (body) => {
+        receivedBody = isEmailRequest(body) ? body : undefined;
+    });
+
+    const validBody = {
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+    };
+
+    await app.request(
+        "/subscriptions",
+        {
+            method: "POST",
+            body: JSON.stringify(validBody),
+            headers: new Headers({ "Content-Type": "application/json" }),
+        },
+        mockEnv,
+    );
+
+    const emailBody = receivedBody ? receivedBody.Messages[0].TextPart : "";
+    const token = extractTokenFromEmail(emailBody);
+
+    return { requestData: validBody, confirmationToken: token };
+}
+
+export function confirmSubscription({
+    app,
+    token,
+    mockEnv,
+}: { app: HonoApp; token: string; mockEnv: EnvBindings }) {
+    return app.request(`/subscriptions/confirm?token=${token}`, {}, mockEnv);
+}
+
+export async function createConfirmedSubscription({
+    app,
+    mockEnv,
+}: { app: HonoApp; mockEnv: EnvBindings }) {
+    const { confirmationToken } = await createUnconfirmedSubscription({
+        app,
+        mockEnv,
+    });
+
+    await confirmSubscription({ app, token: confirmationToken, mockEnv });
 }

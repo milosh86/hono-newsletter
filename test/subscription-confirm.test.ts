@@ -1,12 +1,7 @@
-import { faker } from "@faker-js/faker";
 import postgres from "postgres";
 import { beforeEach, describe, expect, test } from "vitest";
 import app from "../src";
-import {
-    configureDb,
-    extractTokenFromEmail,
-    setupEmailServiceSuccessMock,
-} from "./helpers";
+import { configureDb, createUnconfirmedSubscription } from "./helpers";
 
 const MOCK_ENV = {
     APP_BASE_URL: "https://test-app.com",
@@ -16,52 +11,6 @@ const MOCK_ENV = {
     EMAIL_API_KEY: "test-api-key",
     EMAIL_API_SECRET: "test-api-secret",
 };
-
-async function createSubscription() {
-    let receivedBody: EmailRequest | undefined;
-    setupEmailServiceSuccessMock(MOCK_ENV.EMAIL_BASE_URL, (body) => {
-        receivedBody = isEmailRequest(body) ? body : undefined;
-    });
-
-    const validBody = {
-        name: faker.person.fullName(),
-        email: faker.internet.email(),
-    };
-
-    await app.request(
-        "/subscriptions",
-        {
-            method: "POST",
-            body: JSON.stringify(validBody),
-            headers: new Headers({ "Content-Type": "application/json" }),
-        },
-        MOCK_ENV,
-    );
-
-    const emailBody = receivedBody ? receivedBody.Messages[0].TextPart : "";
-    const token = extractTokenFromEmail(emailBody);
-
-    return { requestData: validBody, confirmationToken: token };
-}
-
-type EmailRequest = {
-    Messages: {
-        From: {
-            Email: string;
-            Name: string;
-        };
-        To: {
-            Email: string;
-        }[];
-        Subject: string;
-        HTMLPart: string;
-        TextPart: string;
-    }[];
-};
-
-function isEmailRequest(body: unknown): body is EmailRequest {
-    return !!body && Array.isArray((body as EmailRequest).Messages);
-}
 
 beforeEach(async () => {
     const { testDbUrl } = await configureDb();
@@ -80,7 +29,10 @@ describe("Subscription Confirmation", () => {
 
     test("GET /subscriptions/confirm returns 200 when called with link created by subscribe API", async () => {
         // arrange
-        const { confirmationToken } = await createSubscription();
+        const { confirmationToken } = await createUnconfirmedSubscription({
+            app,
+            mockEnv: MOCK_ENV,
+        });
 
         // act
         const res = await app.request(
@@ -95,7 +47,10 @@ describe("Subscription Confirmation", () => {
 
     test("GET /subscriptions/confirm returns 401 for unknown subscription token", async () => {
         // arrange
-        const { confirmationToken } = await createSubscription();
+        const { confirmationToken } = await createUnconfirmedSubscription({
+            app,
+            mockEnv: MOCK_ENV,
+        });
 
         // act
         const res = await app.request(
@@ -111,7 +66,11 @@ describe("Subscription Confirmation", () => {
     test("Clicking on the confirmation link confirms a subscriber", async () => {
         // arrange
         const sql = postgres(MOCK_ENV.DATABASE_URL);
-        const { confirmationToken, requestData } = await createSubscription();
+        const { confirmationToken, requestData } =
+            await createUnconfirmedSubscription({
+                app,
+                mockEnv: MOCK_ENV,
+            });
 
         // act
         const res = await app.request(

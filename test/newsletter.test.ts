@@ -1,8 +1,7 @@
-import { faker } from "@faker-js/faker";
 import nock from "nock";
 import { beforeEach, describe, expect, test } from "vitest";
 import app from "../src";
-import { configureDb, setupEmailServiceSuccessMock } from "./helpers";
+import { configureDb, createUnconfirmedSubscription } from "./helpers";
 
 const MOCK_ENV = {
     APP_BASE_URL: "https://test-app.com",
@@ -12,25 +11,6 @@ const MOCK_ENV = {
     EMAIL_API_KEY: "test-api-key",
     EMAIL_API_SECRET: "test-api-secret",
 };
-
-async function createUnconfirmedSubscriber() {
-    setupEmailServiceSuccessMock(MOCK_ENV.EMAIL_BASE_URL);
-
-    const validBody = {
-        name: faker.person.fullName(),
-        email: faker.internet.email(),
-    };
-
-    await app.request(
-        "/subscriptions",
-        {
-            method: "POST",
-            body: JSON.stringify(validBody),
-            headers: new Headers({ "Content-Type": "application/json" }),
-        },
-        MOCK_ENV,
-    );
-}
 
 beforeEach(async () => {
     const { testDbUrl } = await configureDb();
@@ -44,7 +24,10 @@ beforeEach(async () => {
 describe("Newsletter", () => {
     test("newsletters are not delivered to unconfirmed subscribers", async () => {
         // arrange
-        await createUnconfirmedSubscriber();
+        const { confirmationToken } = await createUnconfirmedSubscription({
+            app,
+            mockEnv: MOCK_ENV,
+        });
 
         nock(MOCK_ENV.EMAIL_BASE_URL)
             .post("/send")
