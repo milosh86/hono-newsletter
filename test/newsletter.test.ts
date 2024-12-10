@@ -1,6 +1,7 @@
 import nock from "nock";
 import { beforeEach, describe, expect, test } from "vitest";
 import app from "../src";
+import type { EnvBindings } from "../src/types";
 import {
     configureDb,
     createConfirmedSubscription,
@@ -16,12 +17,34 @@ const MOCK_ENV = {
     EMAIL_API_SECRET: "test-api-secret",
 };
 
+async function sendNewsletterRequest(mockEnv: EnvBindings) {
+    const newsletterRequestBody = JSON.stringify({
+        title: "Newsletter title",
+        content: {
+            text: "Newsletter body as plain text",
+            html: "<p>Newsletter body as HTML</p>",
+        },
+    });
+    const res = await app.request(
+        "/newsletters",
+        {
+            method: "POST",
+            body: newsletterRequestBody,
+            headers: new Headers({ "Content-Type": "application/json" }),
+        },
+        mockEnv,
+    );
+
+    return res;
+}
+
 beforeEach(async () => {
     const { testDbUrl } = await configureDb();
     MOCK_ENV.DATABASE_URL = testDbUrl;
 
     return async () => {
         // cleanup code
+        nock.cleanAll(); // if scope is not done, it will interfere with other tests, so we need to clean it!
     };
 });
 
@@ -46,22 +69,7 @@ describe("Newsletter", () => {
             });
 
         // act
-        const newsletterRequestBody = JSON.stringify({
-            title: "Newsletter title",
-            content: {
-                text: "Newsletter body as plain text",
-                html: "<p>Newsletter body as HTML</p>",
-            },
-        });
-        const res = await app.request(
-            "/newsletters",
-            {
-                method: "POST",
-                body: newsletterRequestBody,
-                headers: new Headers({ "Content-Type": "application/json" }),
-            },
-            MOCK_ENV,
-        );
+        const res = await sendNewsletterRequest(MOCK_ENV);
 
         // assert
         expect(res.status).toBe(200);
@@ -88,22 +96,7 @@ describe("Newsletter", () => {
             });
 
         // act
-        const newsletterRequestBody = JSON.stringify({
-            title: "Newsletter title",
-            content: {
-                text: "Newsletter body as plain text",
-                html: "<p>Newsletter body as HTML</p>",
-            },
-        });
-        const res = await app.request(
-            "/newsletters",
-            {
-                method: "POST",
-                body: newsletterRequestBody,
-                headers: new Headers({ "Content-Type": "application/json" }),
-            },
-            MOCK_ENV,
-        );
+        const res = await sendNewsletterRequest(MOCK_ENV);
 
         // assert
         expect(res.status).toBe(200);

@@ -148,9 +148,12 @@ export async function createUnconfirmedSubscription({
     mockEnv,
 }: { app: HonoApp; mockEnv: EnvBindings }) {
     let receivedBody: EmailRequest | undefined;
-    setupEmailServiceSuccessMock(mockEnv.EMAIL_BASE_URL, (body) => {
-        receivedBody = isEmailRequest(body) ? body : undefined;
-    });
+    const scope = setupEmailServiceSuccessMock(
+        mockEnv.EMAIL_BASE_URL,
+        (body) => {
+            receivedBody = isEmailRequest(body) ? body : undefined;
+        },
+    );
 
     const validBody = {
         name: faker.person.fullName(),

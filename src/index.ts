@@ -2,8 +2,9 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { requestId } from "hono/request-id";
 import { simpleLogger } from "./middlewares/simple-logger";
+import { NewsletterService } from "./newsletter/newsletter-service";
 import { newsletterRequestSchema } from "./newsletter/validations";
-import { SubscriptionsService } from "./subscriptions/service";
+import { SubscriptionsService } from "./subscriptions/subscriptions-service";
 import {
     confirmSubscriptionParamsSchema,
     newSubscriptionRequestSchema,
@@ -96,6 +97,17 @@ app.post(
     async (c) => {
         const requestLogger = c.get("requestLogger");
         requestLogger.info("New newsletter request");
+        const newsletterService = new NewsletterService(c.env, requestLogger);
+        const newsletterRequest = c.req.valid("json");
+
+        try {
+            await newsletterService.publishNewsletter(newsletterRequest);
+        } catch (error) {
+            const errorData = parseError(error);
+            requestLogger.error("newsletter error", errorData);
+            return c.text("500 Internal Error", 500);
+        }
+
         return c.text("200 OK", 200);
     },
 );
