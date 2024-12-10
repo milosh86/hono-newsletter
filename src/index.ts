@@ -2,6 +2,7 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { requestId } from "hono/request-id";
 import { simpleLogger } from "./middlewares/simple-logger";
+import { newsletterRequestSchema } from "./newsletter/validations";
 import { SubscriptionsService } from "./subscriptions/service";
 import {
     confirmSubscriptionParamsSchema,
@@ -89,10 +90,14 @@ app.get(
     },
 );
 
-app.post("/newsletters", async (c) => {
-    const requestLogger = c.get("requestLogger");
-    requestLogger.info("New newsletter request");
-    return c.text("200 OK", 200);
-});
+app.post(
+    "/newsletters",
+    zValidator("json", newsletterRequestSchema), // throws 400 if validation fails!
+    async (c) => {
+        const requestLogger = c.get("requestLogger");
+        requestLogger.info("New newsletter request");
+        return c.text("200 OK", 200);
+    },
+);
 
 export default app;
